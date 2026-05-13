@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Appointment Detail - MedBook</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
+<body>
+<div class="navbar">
+  <a href="/" class="navbar-brand"><div class="brand-icon">🏥</div><div class="brand-text">Med<span>Book</span></div></a>
+  <ul class="nav-links"><li><a href="{{ url_for('patient.dashboard') }}">Dashboard</a></li><li><a href="{{ url_for('auth.logout') }}">Logout</a></li></ul>
+</div>
+<div class="main-content" style="max-width:600px;margin:0 auto;">
+  <h2 class="page-title">Appointment #{{ appt.id }}</h2>
+  <div class="card">
+    <div class="card-body">
+      <p><strong>Doctor:</strong> {{ appt.doctor.user.name }}</p>
+      <p><strong>Specialization:</strong> {{ appt.doctor.specialization }}</p>
+      <p><strong>Date:</strong> {{ appt.time_slot.date }}</p>
+      <p><strong>Time:</strong> {{ appt.time_slot.start_time.strftime("%I:%M %p") }}</p>
+      <p><strong>Status:</strong> <span class="badge badge-{{ appt.status }}">{{ appt.status }}</span></p>
+      <p><strong>Payment:</strong> <span class="badge badge-{{ 'paid' if appt.payment_status=='paid' else 'pending' }}">{{ appt.payment_status }}</span></p>
+      {% if appt.notes %}<p><strong>Your Notes:</strong> {{ appt.notes }}</p>{% endif %}
+      {% if appt.meeting_link and appt.status == 'approved' %}
+        <a href="{{ appt.meeting_link }}" target="_blank" class="btn btn-primary" style="margin-top:16px;">Join Meeting</a>
+      {% endif %}
+      <a href="{{ url_for('patient.dashboard') }}" class="btn btn-outline" style="margin-top:16px;">Back to Dashboard</a>
+    </div>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body></html>

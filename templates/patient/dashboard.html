@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Patient Dashboard - MedBook</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<style>
+  .badge-reviewed {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(34,197,94,0.12);
+    border: 1px solid rgba(34,197,94,0.35);
+    color: #22c55e;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+<div class="navbar">
+  <a href="/" class="navbar-brand"><div class="brand-icon">🏥</div><div class="brand-text">Med<span>Book</span></div></a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="{{ url_for('main.all_reviews') }}">Reviews</a></li>
+    <li><a href="{{ url_for('patient.dashboard') }}" class="active">My Appointments</a></li>
+    <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+  </ul>
+</div>
+
+<div class="main-content">
+  <h2 class="page-title">Welcome, {{ current_user.name }}</h2>
+  <p class="page-subtitle">Your appointments overview</p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for c,m in messages %}<div class="flash flash-{{ c }}">{{ m }}</div>{% endfor %}{% endif %}
+  {% endwith %}
+
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon stat-teal">📅</div><div><div class="stat-value">{{ upcoming|length }}</div><div class="stat-desc">Upcoming</div></div></div>
+    <div class="stat-card"><div class="stat-icon stat-blue">✅</div><div><div class="stat-value">{{ past|length }}</div><div class="stat-desc">Completed</div></div></div>
+  </div>
+
+  <!-- Upcoming -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Upcoming Appointments</div>
+      <a href="/" class="btn btn-primary btn-sm">Book New</a>
+    </div>
+    <div class="card-body">
+      {% if upcoming %}
+        <table>
+          <thead><tr><th>Doctor</th><th>Specialization</th><th>Date</th><th>Time</th><th>Status</th><th>Payment</th><th>Actions</th></tr></thead>
+          <tbody>
+            {% for appt in upcoming %}
+            <tr>
+              <td>{{ appt.doctor.user.name }}</td>
+              <td>{{ appt.doctor.specialization }}</td>
+              <td>{{ appt.time_slot.date }}</td>
+              <td>{{ appt.time_slot.start_time.strftime("%I:%M %p") }}</td>
+              <td><span class="badge badge-{{ appt.status }}">{{ appt.status }}</span></td>
+              <td><span class="badge badge-{{ 'paid' if appt.payment_status == 'paid' else 'pending' }}">{{ appt.payment_status }}</span></td>
+              <td style="display:flex;gap:6px;flex-wrap:wrap;">
+                {% if appt.payment_status == 'unpaid' %}
+                  <a href="{{ url_for('payment.checkout', appointment_id=appt.id) }}" class="btn btn-primary btn-sm">Pay Now</a>
+                {% endif %}
+                <form method="POST" action="{{ url_for('patient.cancel_appointment', appointment_id=appt.id) }}" style="display:inline;">
+                  <button type="submit" class="btn btn-outline btn-sm" onclick="return confirm('Cancel this appointment?')">Cancel</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">📅</div>
+          <div class="empty-title">No appointments yet</div>
+          <div class="empty-desc">Book your first consultation</div>
+          <a href="/" class="btn btn-primary" style="margin-top:15px;">Find Doctors</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Past -->
+  {% if past %}
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header"><div class="card-title">Past Appointments</div></div>
+    <div class="card-body">
+      <table>
+        <thead><tr><th>Doctor</th><th>Date</th><th>Time</th><th>Status</th><th>Payment</th><th>Review</th></tr></thead>
+        <tbody>
+          {% for appt in past %}
+          {% set already_reviewed = appt.id in reviewed_ids %}
+          <tr>
+            <td>{{ appt.doctor.user.name }}</td>
+            <td>{{ appt.time_slot.date }}</td>
+            <td>{{ appt.time_slot.start_time.strftime("%I:%M %p") }}</td>
+            <td><span class="badge badge-{{ appt.status }}">{{ appt.status }}</span></td>
+            <td><span class="badge badge-{{ 'paid' if appt.payment_status == 'paid' else 'pending' }}">{{ appt.payment_status }}</span></td>
+            <td>
+              {% if appt.status == 'completed' %}
+                {% if already_reviewed %}
+                  <span class="badge-reviewed">✓ Reviewed</span>
+                {% else %}
+                  <a href="{{ url_for('patient.submit_review', appointment_id=appt.id) }}"
+                     class="btn btn-primary btn-sm">⭐ Leave Review</a>
+                {% endif %}
+              {% else %}
+                <span style="color:var(--gray-400);font-size:0.8rem;">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

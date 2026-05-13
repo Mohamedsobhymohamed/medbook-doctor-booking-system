@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>All Doctors - MedBook</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
+<body>
+<div class="navbar">
+  <a href="/" class="navbar-brand"><div class="brand-icon">🏥</div><div class="brand-text">Med<span>Book</span></div></a>
+</div>
+
+<div class="main-content">
+  <h2>All Doctors</h2>
+  {% for doctor in doctors %}
+    <div class="card">
+      <div class="card-body">
+        <h3>{{ doctor.user.name }}</h3>
+        <p>{{ doctor.specialization }}</p>
+        <p>${{ doctor.fee }}</p>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+</body>
+</html>

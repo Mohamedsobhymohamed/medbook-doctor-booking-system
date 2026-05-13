@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Book Appointment - MedBook</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    .slots-wrapper {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 14px;
+      margin-top: 8px;
+    }
+    .slot-option {
+      border: 2px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 16px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .2s;
+      background: rgba(255,255,255,0.04);
+      position: relative;
+    }
+    .slot-option:hover {
+      border-color: var(--teal);
+      background: rgba(0,188,212,0.08);
+      transform: translateY(-2px);
+    }
+    .slot-option.selected {
+      border-color: var(--teal);
+      background: rgba(0,188,212,0.18);
+      box-shadow: 0 0 0 3px rgba(0,188,212,0.2);
+    }
+    .slot-option.selected::after {
+      content: '✓';
+      position: absolute;
+      top: 8px; right: 10px;
+      color: var(--teal);
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    .slot-day {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--teal);
+      margin-bottom: 4px;
+    }
+    .slot-date-num {
+      font-size: 0.78rem;
+      color: var(--gray-400);
+      margin-bottom: 10px;
+    }
+    .slot-divider {
+      height: 1px;
+      background: rgba(255,255,255,0.1);
+      margin: 8px 0;
+    }
+    .slot-time-main {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--white);
+    }
+    .slot-time-end {
+      font-size: 0.75rem;
+      color: var(--gray-400);
+      margin-top: 3px;
+    }
+    .slot-option.selected .slot-time-main { color: var(--teal); }
+    .slot-option.selected .slot-day { color: var(--white); }
+
+    #confirmBtn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .selected-summary {
+      background: rgba(0,188,212,0.08);
+      border: 1px solid rgba(0,188,212,0.3);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .selected-summary.visible { display: block; }
+  </style>
+</head>
+<body>
+<div class="navbar">
+  <a href="/" class="navbar-brand"><div class="brand-icon">🏥</div><div class="brand-text">Med<span>Book</span></div></a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="{{ url_for('patient.dashboard') }}">My Appointments</a></li>
+    <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+  </ul>
+</div>
+
+<div class="main-content" style="max-width:780px;margin:0 auto;">
+  <h2 class="page-title">Book Appointment</h2>
+  <p class="page-subtitle">Choose a date and time that works for you</p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for c,m in messages %}<div class="flash flash-{{ c }}">{{ m }}</div>{% endfor %}{% endif %}
+  {% endwith %}
+
+  <!-- Doctor card -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-body" style="display:flex;gap:16px;align-items:center;">
+      <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--sky));display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.4rem;font-weight:700;flex-shrink:0;">
+        {{ doctor.user.name[0] }}
+      </div>
+      <div>
+        <div style="font-size:1.2rem;font-weight:700;">{{ doctor.user.name }}</div>
+        <div style="color:var(--teal);margin-top:2px;">{{ doctor.specialization }}</div>
+        <div style="margin-top:6px;color:var(--gray-400);">💰 Consultation Fee: <strong style="color:var(--white);">${{ doctor.fee }}</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <form method="POST" id="bookForm">
+    <input type="hidden" name="slot_id" id="slotIdInput" value="">
+
+    <!-- Slot grid -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-header"><div class="card-title">📅 Select Date &amp; Time</div></div>
+      <div class="card-body">
+        {% if slots %}
+          <p style="color:var(--gray-400);font-size:0.88rem;margin-bottom:16px;">
+            Click a card to select your preferred appointment slot.
+          </p>
+          <div class="slots-wrapper">
+            {% for slot in slots %}
+            <div class="slot-option"
+                 data-slot-id="{{ slot.id }}"
+                 onclick="selectSlot(this,
+                   '{{ slot.id }}',
+                   '{{ slot.date.strftime('%A, %B %d, %Y') }}',
+                   '{{ slot.start_time.strftime('%I:%M %p') }}',
+                   '{{ slot.end_time.strftime('%I:%M %p') }}')">
+              <!-- Day name -->
+              <div class="slot-day">{{ slot.date.strftime("%A") }}</div>
+              <!-- Full date -->
+              <div class="slot-date-num">{{ slot.date.strftime("%b %d, %Y") }}</div>
+              <div class="slot-divider"></div>
+              <!-- Time -->
+              <div class="slot-time-main">{{ slot.start_time.strftime("%I:%M %p") }}</div>
+              <div class="slot-time-end">until {{ slot.end_time.strftime("%I:%M %p") }}</div>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="empty-state">
+            <div class="empty-icon">📅</div>
+            <div class="empty-title">No available slots</div>
+            <div class="empty-desc">This doctor has no upcoming availability. Try another doctor.</div>
+            <a href="/" class="btn btn-outline" style="margin-top:12px;">Browse Doctors</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Selected summary (appears after picking a slot) -->
+    <div class="selected-summary" id="slotSummary">
+      <p style="font-weight:700;color:var(--teal);margin-bottom:6px;">✅ Selected Appointment</p>
+      <p id="summaryDate" style="font-weight:600;"></p>
+      <p id="summaryTime" style="color:var(--gray-400);margin-top:4px;font-size:0.9rem;"></p>
+    </div>
+
+    {% if slots %}
+    <div class="card">
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">Notes / Symptoms <span style="color:var(--gray-400);font-size:0.78rem;">(optional)</span></label>
+          <textarea name="notes" class="form-control" rows="3"
+            placeholder="Describe your symptoms or reason for visit..."></textarea>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+          <button type="submit" id="confirmBtn" class="btn btn-primary btn-lg" disabled>
+            Confirm Booking
+          </button>
+          <a href="/" class="btn btn-outline btn-lg">Cancel</a>
+          <span id="selectHint" style="color:var(--gray-400);font-size:0.85rem;">
+            ☝️ Select a slot above first
+          </span>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </form>
+</div>
+
+<script>
+function selectSlot(el, slotId, date, startTime, endTime) {
+  document.querySelectorAll('.slot-option').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('slotIdInput').value = slotId;
+
+  // Show summary
+  document.getElementById('summaryDate').textContent = '📅 ' + date;
+  document.getElementById('summaryTime').textContent = '🕐 ' + startTime + ' – ' + endTime;
+  document.getElementById('slotSummary').classList.add('visible');
+
+  // Enable button, hide hint
+  document.getElementById('confirmBtn').disabled = false;
+  document.getElementById('selectHint').style.display = 'none';
+
+  // Smooth scroll to summary
+  document.getElementById('slotSummary').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+document.getElementById('bookForm').addEventListener('submit', function(e) {
+  if (!document.getElementById('slotIdInput').value) {
+    e.preventDefault();
+    alert('Please select a time slot first.');
+  }
+});
+</script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

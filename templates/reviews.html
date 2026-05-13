@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Patient Reviews - MedBook</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    .reviews-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 28px;
+    }
+    .review-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 22px;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .review-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+    }
+    .review-header { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+    .review-avatar {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--teal), var(--sky));
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 700; font-size: 1rem; flex-shrink: 0;
+    }
+    .review-patient  { font-weight: 600; font-size: 0.92rem; }
+    .review-doctor   { color: var(--teal); font-size: 0.8rem; margin-top: 2px; }
+    .review-stars    { color: #f59e0b; font-size: 1rem; margin-bottom: 8px; }
+    .review-comment  { color: var(--gray-400); font-size: 0.88rem; line-height: 1.6; font-style: italic; }
+    .review-date     { color: var(--gray-500); font-size: 0.74rem; margin-top: 10px; }
+    .overall-stats {
+      display: flex; gap: 40px; flex-wrap: wrap;
+      background: var(--card-bg); border: 1px solid var(--card-border);
+      border-radius: var(--radius); padding: 22px 32px; margin-top: 28px;
+    }
+    .overall-num  { font-size: 2.4rem; font-weight: 800; color: var(--teal); }
+    .overall-desc { color: var(--gray-400); font-size: 0.82rem; margin-top: 2px; }
+    .filter-row   { display:flex; gap:10px; flex-wrap:wrap; margin-top:22px; align-items:center; }
+    .star-btn {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 20px;
+      color: var(--gray-400);
+      padding: 5px 14px;
+      cursor: pointer;
+      font-size: 0.83rem;
+      transition: all .18s;
+    }
+    .star-btn:hover { border-color: #f59e0b; color: #f59e0b; }
+    .star-btn.active { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,0.1); }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="navbar-brand"><div class="brand-icon">🏥</div><div class="brand-text">Med<span>Book</span></div></a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="{{ url_for('main.all_reviews') }}" class="active">Reviews</a></li>
+    {% if current_user.is_authenticated %}
+      {% if current_user.role == 'patient' %}<li><a href="{{ url_for('patient.dashboard') }}">My Appointments</a></li>{% endif %}
+      <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+    {% else %}
+      <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+      <li><a href="{{ url_for('auth.register') }}" class="nav-btn">Register</a></li>
+    {% endif %}
+  </ul>
+</nav>
+
+<div class="main-content">
+  <div class="section-center">
+    <div class="section-eyebrow">What Patients Say</div>
+    <h2 class="section-title">Patient Reviews</h2>
+    <p class="section-sub">Real feedback from real patients about our doctors.</p>
+  </div>
+
+  {% if reviews %}
+  {% set avg = (reviews | sum(attribute='rating') / reviews | length) | round(1) %}
+
+  <div class="overall-stats">
+    <div>
+      <div class="overall-num">{{ avg }}</div>
+      <div style="color:#f59e0b;margin-top:2px;">
+        {% for i in range(avg | int) %}⭐{% endfor %}
+      </div>
+      <div class="overall-desc">Average Rating</div>
+    </div>
+    <div>
+      <div class="overall-num">{{ reviews | length }}</div>
+      <div class="overall-desc">Total Reviews</div>
+    </div>
+    <div>
+      <div class="overall-num">{{ doctors | length }}</div>
+      <div class="overall-desc">Doctors</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-row">
+    <span style="color:var(--gray-400);font-size:0.83rem;white-space:nowrap;">Filter by rating:</span>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;" id="starFilters">
+      <button class="star-btn active" data-stars="0">All</button>
+      <button class="star-btn" data-stars="5">⭐⭐⭐⭐⭐ 5</button>
+      <button class="star-btn" data-stars="4">⭐⭐⭐⭐ 4</button>
+      <button class="star-btn" data-stars="3">⭐⭐⭐ 3</button>
+      <button class="star-btn" data-stars="2">⭐⭐ 2</button>
+      <button class="star-btn" data-stars="1">⭐ 1</button>
+    </div>
+    <input type="text" id="reviewSearch"
+           placeholder="Search by doctor or patient..."
+           class="search-input"
+           style="flex:1;min-width:180px;">
+  </div>
+
+  <!-- Cards -->
+  <div class="reviews-grid" id="reviewsGrid">
+    {% for review in reviews %}
+    <div class="review-card"
+         data-rating="{{ review.rating }}"
+         data-doctor="{{ review.doctor.user.name | lower }}"
+         data-patient="{{ review.patient.name | lower }}">
+      <div class="review-header">
+        <div class="review-avatar">{{ review.patient.name[0] | upper }}</div>
+        <div>
+          <div class="review-patient">{{ review.patient.name }}</div>
+          <div class="review-doctor">→ {{ review.doctor.user.name }} · {{ review.doctor.specialization }}</div>
+        </div>
+      </div>
+      <div class="review-stars">
+        {% for i in range(review.rating) %}⭐{% endfor %}
+        <span style="color:var(--gray-400);font-size:0.78rem;margin-left:6px;">{{ review.rating }}/5</span>
+      </div>
+      {% if review.comment %}
+        <div class="review-comment">"{{ review.comment }}"</div>
+      {% else %}
+        <div class="review-comment">No comment left.</div>
+      {% endif %}
+      <div class="review-date">{{ review.created_at.strftime("%B %d, %Y") }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div id="noResults" style="display:none;text-align:center;padding:60px 0;color:var(--gray-400);">
+    <div style="font-size:3rem;">🔍</div>
+    <p style="margin-top:12px;">No reviews match your filter.</p>
+  </div>
+
+  {% else %}
+  <div class="empty-state" style="margin-top:60px;">
+    <div class="empty-icon">⭐</div>
+    <div class="empty-title">No reviews yet</div>
+    <div class="empty-desc">Reviews will appear here after patients complete appointments.</div>
+    <a href="/" class="btn btn-primary" style="margin-top:16px;">Find a Doctor</a>
+  </div>
+  {% endif %}
+</div>
+
+<footer class="footer">
+  <div class="footer-grid">
+    <div><div class="brand-text">Med<span>Book</span></div><p style="color:#94a3b8;margin-top:10px;">Your trusted online doctor booking platform.</p></div>
+    <div><div class="footer-heading">Links</div><ul class="footer-links"><li><a href="/">Home</a></li><li><a href="{{ url_for('main.all_reviews') }}">Reviews</a></li><li><a href="{{ url_for('auth.login') }}">Login</a></li></ul></div>
+    <div><div class="footer-heading">Contact</div><ul class="footer-links"><li><a href="#">support@medbook.com</a></li></ul></div>
+  </div>
+  <div class="footer-bottom">© 2026 MedBook. All rights reserved.</div>
+</footer>
+
+<script>
+(function () {
+  var currentStars = 0;
+  var currentSearch = '';
+
+  // Star filter buttons
+  document.querySelectorAll('.star-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.star-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      currentStars = parseInt(btn.dataset.stars, 10);
+      applyFilters();
+    });
+  });
+
+  // Search input
+  var searchInput = document.getElementById('reviewSearch');
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      currentSearch = searchInput.value.toLowerCase().trim();
+      applyFilters();
+    });
+  }
+
+  function applyFilters() {
+    var cards = document.querySelectorAll('.review-card');
+    var visible = 0;
+    cards.forEach(function(card) {
+      var rating  = parseInt(card.dataset.rating, 10);
+      var doctor  = card.dataset.doctor  || '';
+      var patient = card.dataset.patient || '';
+
+      var starMatch   = (currentStars === 0) || (rating === currentStars);
+      var searchMatch = !currentSearch ||
+                        doctor.indexOf(currentSearch) !== -1 ||
+                        patient.indexOf(currentSearch) !== -1;
+
+      if (starMatch && searchMatch) {
+        card.style.display = '';
+        visible++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+    var noResults = document.getElementById('noResults');
+    if (noResults) noResults.style.display = (visible === 0) ? 'block' : 'none';
+  }
+})();
+</script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

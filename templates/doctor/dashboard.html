@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Doctor Dashboard - MedBook</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
+<body>
+<div class="navbar">
+  <a href="/" class="navbar-brand"><div class="brand-icon">🏥</div><div class="brand-text">Med<span>Book</span></div></a>
+  <ul class="nav-links">
+    <li><a href="{{ url_for('doctor.dashboard') }}" class="active">Dashboard</a></li>
+    <li><a href="{{ url_for('doctor.schedule') }}">My Schedule</a></li>
+    <li><a href="{{ url_for('doctor.appointments') }}">Appointments</a></li>
+    <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+  </ul>
+</div>
+<div class="main-content">
+  <h2 class="page-title">Dr. {{ current_user.name }}</h2>
+  <p class="page-subtitle">{{ doctor.specialization }} · Fee: ${{ doctor.fee }}</p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for c,m in messages %}<div class="flash flash-{{ c }}">{{ m }}</div>{% endfor %}{% endif %}
+  {% endwith %}
+
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon stat-teal">📅</div><div><div class="stat-value">{{ total_count }}</div><div class="stat-desc">Total Appointments</div></div></div>
+    <div class="stat-card"><div class="stat-icon stat-amber">⏳</div><div><div class="stat-value">{{ pending_count }}</div><div class="stat-desc">Pending</div></div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header"><div class="card-title">Quick Actions</div></div>
+    <div class="card-body" style="display:flex;gap:12px;flex-wrap:wrap;">
+      <a href="{{ url_for('doctor.schedule') }}" class="btn btn-primary">➕ Add Time Slots</a>
+      <a href="{{ url_for('doctor.appointments') }}" class="btn btn-outline">📋 All Appointments</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-title">Today's Appointments — {{ today }}</div></div>
+    <div class="card-body">
+      {% if today_appts %}
+        <table>
+          <thead><tr><th>Patient</th><th>Time</th><th>Status</th><th>Payment</th></tr></thead>
+          <tbody>
+            {% for appt in today_appts %}
+            <tr>
+              <td>{{ appt.patient.name }}</td>
+              <td>{{ appt.time_slot.start_time.strftime("%I:%M %p") }}</td>
+              <td><span class="badge badge-{{ appt.status }}">{{ appt.status }}</span></td>
+              <td><span class="badge badge-{{ 'paid' if appt.payment_status=='paid' else 'pending' }}">{{ appt.payment_status }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">📋</div>
+          <div class="empty-title">No appointments today</div>
+          <div class="empty-desc">Add time slots so patients can book you</div>
+          <a href="{{ url_for('doctor.schedule') }}" class="btn btn-primary" style="margin-top:12px;">Add Slots</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body></html>

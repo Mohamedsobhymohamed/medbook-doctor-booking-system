@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Payment Cancelled - MedBook</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
+<body>
+<div class="navbar">
+  <a href="/" class="navbar-brand"><div class="brand-icon">🏥</div><div class="brand-text">Med<span>Book</span></div></a>
+  <ul class="nav-links"><li><a href="{{ url_for('patient.dashboard') }}">Dashboard</a></li><li><a href="{{ url_for('auth.logout') }}">Logout</a></li></ul>
+</div>
+<div class="main-content" style="max-width:600px;margin:0 auto;text-align:center;">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for c,m in messages %}<div class="flash flash-{{ c }}">{{ m }}</div>{% endfor %}{% endif %}
+  {% endwith %}
+
+  <div class="card">
+    <div class="card-body">
+      <div style="font-size:4rem;margin-bottom:16px;">⚠️</div>
+      <h2 style="margin-bottom:8px;">Payment Cancelled</h2>
+      <p style="color:var(--gray-400);margin-bottom:24px;">Your appointment still exists with <strong>pending</strong> status and <strong>unpaid</strong> payment. You can complete payment later.</p>
+
+      <div style="text-align:left;background:var(--gray-100);padding:16px;border-radius:var(--radius-sm);margin-bottom:24px;">
+        <p><strong>Doctor:</strong> {{ appt.doctor.user.name }}</p>
+        <p style="margin-top:6px;"><strong>Date:</strong> {{ appt.time_slot.date }}</p>
+        <p style="margin-top:6px;"><strong>Status:</strong> <span class="badge badge-pending">{{ appt.status }}</span></p>
+        <p style="margin-top:6px;"><strong>Payment:</strong> <span class="badge badge-pending">{{ appt.payment_status }}</span></p>
+      </div>
+
+      <a href="{{ url_for('payment.checkout', appointment_id=appt.id) }}" class="btn btn-primary btn-lg">Pay Now</a>
+      <a href="{{ url_for('patient.dashboard') }}" class="btn btn-outline" style="margin-left:12px;">Dashboard</a>
+    </div>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body></html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>All Appointments - MedBook</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
+<body>
+<div class="navbar">
+  <a href="/" class="navbar-brand"><div class="brand-icon">🏥</div><div class="brand-text">Med<span>Book</span></div></a>
+  <ul class="nav-links">
+    <li><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+    <li><a href="{{ url_for('admin.all_appointments') }}" class="active">Appointments</a></li>
+    <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+  </ul>
+</div>
+<div class="main-content">
+  <h2 class="page-title">All Appointments</h2>
+  <div class="card">
+    <div class="card-body">
+      {% if appointments %}
+      <table>
+        <thead><tr><th>#</th><th>Patient</th><th>Doctor</th><th>Date</th><th>Time</th><th>Status</th><th>Payment</th></tr></thead>
+        <tbody>
+          {% for appt in appointments %}
+          <tr>
+            <td>#{{ appt.id }}</td>
+            <td>{{ appt.patient.name }}</td>
+            <td>{{ appt.doctor.user.name }}</td>
+            <td>{{ appt.time_slot.date if appt.time_slot else 'N/A' }}</td>
+            <td>{{ appt.time_slot.start_time.strftime("%I:%M %p") if appt.time_slot else 'N/A' }}</td>
+            <td><span class="badge badge-{{ appt.status }}">{{ appt.status }}</span></td>
+            <td><span class="badge badge-{{ 'paid' if appt.payment_status=='paid' else 'pending' }}">{{ appt.payment_status }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state"><div class="empty-title">No appointments</div></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body></html>

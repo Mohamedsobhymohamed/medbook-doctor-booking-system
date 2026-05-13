@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Leave a Review - MedBook</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <style>
+    .star-selector {
+      display: flex;
+      gap: 10px;
+      flex-direction: row-reverse;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+
+    .star-selector input {
+      display: none;
+    }
+
+    /* ⭐ DEFAULT = visible light grey */
+    .star-selector label {
+      font-size: 2rem;
+      cursor: pointer;
+      color: #d1d5db; /* light grey */
+      transition: all 0.2s ease;
+    }
+
+    /* ⭐ HOVER + SELECTED = gold */
+    .star-selector label:hover,
+    .star-selector label:hover ~ label,
+    .star-selector input:checked ~ label {
+      color: #f59e0b;
+      transform: scale(1.1);
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="navbar">
+  <a href="/" class="navbar-brand">
+    <div class="brand-icon">🏥</div>
+    <div class="brand-text">Med<span>Book</span></div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="{{ url_for('patient.dashboard') }}">My Appointments</a></li>
+    <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+  </ul>
+</div>
+
+<div class="main-content" style="max-width:580px;margin:0 auto;">
+  <h2 class="page-title">⭐ Leave a Review</h2>
+  <p class="page-subtitle">Share your experience with {{ appt.doctor.user.name }}</p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for c,m in messages %}
+        <div class="flash flash-{{ c }}">{{ m }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Appointment summary -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-body" style="display:flex;gap:14px;align-items:center;">
+      <div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--sky));display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;font-weight:700;">
+        {{ appt.doctor.user.name[0] }}
+      </div>
+      <div>
+        <div style="font-weight:700;">{{ appt.doctor.user.name }}</div>
+        <div style="color:var(--teal);font-size:0.85rem;">{{ appt.doctor.specialization }}</div>
+        <div style="color:var(--gray-400);font-size:0.82rem;margin-top:4px;">
+          {{ appt.time_slot.date.strftime("%A, %B %d, %Y") }}
+          at {{ appt.time_slot.start_time.strftime("%I:%M %p") }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Review form -->
+  <div class="card">
+    <div class="card-body">
+      <form method="POST">
+
+        <div class="form-group">
+          <label class="form-label">Your Rating</label>
+
+          <div class="star-selector">
+            <input type="radio" name="rating" id="s5" value="5">
+            <label for="s5" title="Excellent">★</label>
+
+            <input type="radio" name="rating" id="s4" value="4">
+            <label for="s4" title="Good">★</label>
+
+            <input type="radio" name="rating" id="s3" value="3">
+            <label for="s3" title="Average">★</label>
+
+            <input type="radio" name="rating" id="s2" value="2">
+            <label for="s2" title="Below Average">★</label>
+
+            <input type="radio" name="rating" id="s1" value="1">
+            <label for="s1" title="Poor">★</label>
+          </div>
+
+          <p id="ratingHint" style="color:var(--gray-400);font-size:0.8rem;margin-top:6px;">
+            Click a star to rate
+          </p>
+        </div>
+
+        <div class="form-group" style="margin-top:20px;">
+          <label class="form-label">
+            Your Comment
+            <span style="color:var(--gray-400);font-size:0.78rem;">(optional)</span>
+          </label>
+
+          <textarea name="comment" class="form-control" rows="4"
+            placeholder="How was your experience? What went well?"></textarea>
+        </div>
+
+        <div style="display:flex;gap:12px;margin-top:8px;">
+          <button type="submit" class="btn btn-primary btn-lg">Submit Review</button>
+          <a href="{{ url_for('patient.dashboard') }}" class="btn btn-outline btn-lg">Cancel</a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+const labels = ['Poor','Below Average','Average','Good','Excellent'];
+
+document.querySelectorAll('.star-selector input').forEach(input => {
+  input.addEventListener('change', () => {
+    const val = parseInt(input.value);
+    const hint = document.getElementById('ratingHint');
+
+    hint.textContent = labels[val-1] + ' (' + val + '/5)';
+    hint.style.color = '#f59e0b';
+  });
+});
+</script>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+</body>
+</html>

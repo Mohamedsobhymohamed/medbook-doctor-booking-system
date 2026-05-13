@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Manage Doctors - MedBook</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
+<body>
+<div class="navbar">
+  <a href="/" class="navbar-brand"><div class="brand-icon">🏥</div><div class="brand-text">Med<span>Book</span></div></a>
+  <ul class="nav-links">
+    <li><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+    <li><a href="{{ url_for('admin.manage_doctors') }}" class="active">Doctors</a></li>
+    <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+  </ul>
+</div>
+<div class="main-content">
+  <h2 class="page-title">Manage Doctors</h2>
+  <p class="page-subtitle">View, manage, and remove doctor accounts</p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for c,m in messages %}<div class="flash flash-{{ c }}">{{ m }}</div>{% endfor %}{% endif %}
+  {% endwith %}
+
+  <div class="card">
+    <div class="card-body">
+      {% if doctors %}
+      <table>
+        <thead><tr><th>Name</th><th>Specialization</th><th>Fee</th><th>Rating</th><th>Slots</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          {% for doctor in doctors %}
+          <tr>
+            <td>{{ doctor.user.name }}</td>
+            <td>{{ doctor.specialization }}</td>
+            <td>${{ doctor.fee }}</td>
+            <td>⭐ {{ doctor.rating }} ({{ doctor.total_reviews }})</td>
+            <td>{{ doctor.time_slots | selectattr("is_available") | list | length }} available</td>
+            <td><span class="badge badge-{{ 'approved' if doctor.is_available else 'rejected' }}">{{ 'Active' if doctor.is_available else 'Unavailable' }}</span></td>
+            <td>
+              <form method="POST" action="{{ url_for('admin.delete_doctor', doctor_id=doctor.id) }}" style="display:inline;">
+                <button type="submit" class="btn btn-danger btn-sm"
+                  onclick="return confirm('Permanently delete Dr. {{ doctor.user.name }}? This cannot be undone.')">
+                  🗑 Remove Doctor
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state"><div class="empty-icon">👨‍⚕️</div><div class="empty-title">No doctors registered</div></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body></html>

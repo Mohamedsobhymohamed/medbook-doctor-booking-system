@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Appointments - MedBook</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
+<body>
+<div class="navbar">
+  <a href="/" class="navbar-brand"><div class="brand-icon">🏥</div><div class="brand-text">Med<span>Book</span></div></a>
+  <ul class="nav-links">
+    <li><a href="{{ url_for('doctor.dashboard') }}">Dashboard</a></li>
+    <li><a href="{{ url_for('doctor.appointments') }}" class="active">Appointments</a></li>
+    <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+  </ul>
+</div>
+<div class="main-content">
+  <h2 class="page-title">All Appointments</h2>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for c,m in messages %}<div class="flash flash-{{ c }}">{{ m }}</div>{% endfor %}{% endif %}
+  {% endwith %}
+
+  <div style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap;">
+    <a href="{{ url_for('doctor.appointments') }}" class="btn btn-outline btn-sm">All</a>
+    <a href="{{ url_for('doctor.appointments', status='pending') }}" class="btn btn-outline btn-sm">Pending</a>
+    <a href="{{ url_for('doctor.appointments', status='approved') }}" class="btn btn-outline btn-sm">Approved</a>
+    <a href="{{ url_for('doctor.appointments', status='completed') }}" class="btn btn-outline btn-sm">Completed</a>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      {% if appts %}
+      <table>
+        <thead><tr><th>Patient</th><th>Date</th><th>Time</th><th>Status</th><th>Payment</th><th>Actions</th></tr></thead>
+        <tbody>
+          {% for appt in appts %}
+          <tr>
+            <td>{{ appt.patient.name }}</td>
+            <td>{{ appt.time_slot.date }}</td>
+            <td>{{ appt.time_slot.start_time.strftime("%I:%M %p") }}</td>
+            <td><span class="badge badge-{{ appt.status }}">{{ appt.status }}</span></td>
+            <td><span class="badge badge-{{ 'paid' if appt.payment_status=='paid' else 'pending' }}">{{ appt.payment_status }}</span></td>
+            <td style="display:flex;gap:6px;flex-wrap:wrap;">
+              {% if appt.status == 'pending' %}
+                <form method="POST" action="{{ url_for('doctor.appointment_action', appt_id=appt.id) }}" style="display:inline;">
+                  <input type="hidden" name="action" value="approve">
+                  <button type="submit" class="btn btn-primary btn-sm">Approve</button>
+                </form>
+                <form method="POST" action="{{ url_for('doctor.appointment_action', appt_id=appt.id) }}" style="display:inline;">
+                  <input type="hidden" name="action" value="reject">
+                  <button type="submit" class="btn btn-outline btn-sm">Reject</button>
+                </form>
+              {% elif appt.status == 'approved' %}
+                <form method="POST" action="{{ url_for('doctor.appointment_action', appt_id=appt.id) }}" style="display:inline;">
+                  <input type="hidden" name="action" value="complete">
+                  <button type="submit" class="btn btn-primary btn-sm">Complete</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <div class="empty-title">No appointments found</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body></html>

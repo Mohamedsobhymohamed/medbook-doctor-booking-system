@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Checkout - MedBook</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
+<body>
+<div class="navbar">
+  <a href="/" class="navbar-brand"><div class="brand-icon">🏥</div><div class="brand-text">Med<span>Book</span></div></a>
+  <ul class="nav-links"><li><a href="{{ url_for('patient.dashboard') }}">Dashboard</a></li><li><a href="{{ url_for('auth.logout') }}">Logout</a></li></ul>
+</div>
+<div class="main-content" style="max-width:600px;margin:0 auto;">
+  <h2 class="page-title">💳 Payment Checkout</h2>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for c,m in messages %}<div class="flash flash-{{ c }}">{{ m }}</div>{% endfor %}{% endif %}
+  {% endwith %}
+
+  <div class="card">
+    <div class="card-header"><div class="card-title">Appointment Summary</div></div>
+    <div class="card-body">
+      <p><strong>Doctor:</strong> {{ appt.doctor.user.name }}</p>
+      <p style="margin-top:8px;"><strong>Specialization:</strong> {{ doctor.specialization }}</p>
+      <p style="margin-top:8px;"><strong>Date:</strong> {{ appt.time_slot.date.strftime("%A, %B %d, %Y") }}</p>
+      <p style="margin-top:8px;"><strong>Time:</strong> {{ appt.time_slot.start_time.strftime("%I:%M %p") }} – {{ appt.time_slot.end_time.strftime("%I:%M %p") }}</p>
+      <hr style="margin:16px 0;border-color:var(--gray-200);">
+      <p style="font-size:1.4rem;font-weight:700;color:var(--teal);">Total: ${{ fee }}</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <div class="card-body" style="text-align:center;">
+      <p style="color:var(--gray-400);margin-bottom:20px;">Click "Confirm Payment" to complete your booking.</p>
+      <form method="POST" action="{{ url_for('payment.confirm_payment', appointment_id=appt.id) }}">
+        <button type="submit" class="btn btn-primary btn-lg" style="width:100%;margin-bottom:12px;">
+          ✅ Confirm Payment — ${{ fee }}
+        </button>
+      </form>
+      <a href="{{ url_for('payment.payment_cancel', appointment_id=appt.id) }}" class="btn btn-outline" style="width:100%;">Cancel</a>
+    </div>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body></html>

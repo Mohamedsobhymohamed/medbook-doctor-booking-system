@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register - MedBook</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .field-error {
+            color: var(--red);
+            font-size: 0.78rem;
+            margin-top: 5px;
+            display: none;
+            align-items: center;
+            gap: 4px;
+        }
+        .field-error.visible {
+            display: flex;
+        }
+        .form-control.invalid {
+            border-color: var(--red) !important;
+            box-shadow: 0 0 0 3px rgba(239,68,68,0.15) !important;
+        }
+        .form-control.valid {
+            border-color: var(--green) !important;
+            box-shadow: 0 0 0 3px rgba(34,197,94,0.12) !important;
+        }
+        .hint-text {
+            color: rgba(255,255,255,0.35);
+            font-size: 0.76rem;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .form-label .required-star {
+            color: var(--red);
+            margin-left: 2px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="auth-wrapper">
+    <div class="auth-card">
+
+        <!-- Logo -->
+        <div class="auth-logo">
+            <div class="brand-icon">🏥</div>
+            <div class="brand-text">Med<span>Book</span></div>
+        </div>
+
+        <h2 class="auth-title">Create Account</h2>
+        <p class="auth-subtitle">Join MedBook today</p>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-container">
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Register Form -->
+        <form method="POST" id="registerForm" novalidate>
+
+            <!-- Full Name -->
+            <div class="form-group">
+                <label class="form-label">Full Name <span class="required-star">*</span></label>
+                <input
+                    type="text"
+                    name="name"
+                    id="nameInput"
+                    class="form-control"
+                    placeholder="Enter your name"
+                    autocomplete="name"
+                >
+                <div class="field-error" id="nameError">⚠ Please enter a valid name (letters only, no numbers).</div>
+            </div>
+
+            <!-- Email -->
+            <div class="form-group">
+                <label class="form-label">Email <span class="required-star">*</span></label>
+                <input
+                    type="text"
+                    name="email"
+                    id="emailInput"
+                    class="form-control"
+                    placeholder="Enter your email"
+                    autocomplete="email"
+                >
+                <div class="field-error" id="emailError">⚠ Please enter a valid email address (e.g. name@example.com).</div>
+            </div>
+
+            <!-- Phone -->
+            <div class="form-group">
+                <label class="form-label">Phone <span class="required-star">*</span></label>
+                <input
+                    type="text"
+                    name="phone"
+                    id="phoneInput"
+                    class="form-control"
+                    placeholder="Phone number (digits only)"
+                    autocomplete="tel"
+                    inputmode="numeric"
+                >
+                <div class="field-error" id="phoneError">⚠ Phone number must contain digits only (no letters or symbols).</div>
+            </div>
+
+            <!-- Role Selector -->
+            <div class="form-group">
+                <label class="form-label">Register As <span class="required-star">*</span></label>
+                <div class="role-selector">
+                    <label class="role-option selected">
+                        <input type="radio" name="role" value="patient" checked>
+                        <div class="role-icon">🧑</div>
+                        <div class="role-label">Patient</div>
+                    </label>
+                    <label class="role-option">
+                        <input type="radio" name="role" value="doctor">
+                        <div class="role-icon">👨‍⚕️</div>
+                        <div class="role-label">Doctor</div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Doctor-only Fields -->
+            <div id="doctorFields" style="display:none;">
+
+                <div class="form-group">
+                    <label class="form-label">Specialization <span class="required-star">*</span></label>
+                    <input
+                        type="text"
+                        name="specialization"
+                        id="specializationInput"
+                        class="form-control"
+                        placeholder="e.g. Cardiology"
+                    >
+                    <div class="field-error" id="specializationError">⚠ Specialization is required.</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Consultation Fee <span class="required-star">*</span></label>
+                    <input
+                        type="number"
+                        name="fee"
+                        id="feeInput"
+                        class="form-control"
+                        placeholder="e.g. 50"
+                        min="0"
+                    >
+                    <div class="field-error" id="feeError">⚠ Consultation fee is required.</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Years of Experience <span class="required-star">*</span></label>
+                    <input
+                        type="number"
+                        name="years_experience"
+                        id="yearsInput"
+                        class="form-control"
+                        placeholder="e.g. 5"
+                        min="0"
+                    >
+                    <div class="field-error" id="yearsError">⚠ Years of experience is required.</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Bio <span style="color:var(--gray-400);font-size:0.78rem;">(optional)</span></label>
+                    <textarea name="bio" class="form-control" placeholder="Short description about yourself"></textarea>
+                </div>
+
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+                <label class="form-label">Password (must be at least 6 characters) <span class="required-star">*</span></label>
+                <input
+                    type="password"
+                    name="password"
+                    id="passwordInput"
+                    class="form-control"
+                    placeholder="At least 6 characters"
+                    autocomplete="new-password"
+                >
+                <div class="hint-text" id="passwordHint">ℹ️ Use 6 or more letters, numbers, or a mix of both.</div>
+                <div class="field-error" id="passwordError">⚠ Password must be at least 6 characters long.</div>
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="form-group">
+                <label class="form-label">Confirm Password <span class="required-star">*</span></label>
+                <input
+                    type="password"
+                    name="confirm_password"
+                    id="confirmInput"
+                    class="form-control"
+                    placeholder="Re-enter your password"
+                    autocomplete="new-password"
+                >
+                <div class="field-error" id="confirmError">⚠ Passwords do not match.</div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg" style="width:100%;">
+                Register
+            </button>
+
+        </form>
+
+        <div class="auth-divider">or</div>
+
+        <p style="text-align:center; color:#ccc;">
+            Already have an account?
+            <a href="{{ url_for('auth.login') }}" class="auth-link">Login</a>
+        </p>
+
+    </div>
+</div>
+
+<script>
+(function () {
+    /* ── helpers ─────────────────────────────── */
+    function showError(input, errorEl) {
+        input.classList.add('invalid');
+        input.classList.remove('valid');
+        errorEl.classList.add('visible');
+    }
+    function showValid(input, errorEl) {
+        input.classList.remove('invalid');
+        input.classList.add('valid');
+        errorEl.classList.remove('visible');
+    }
+    function clearState(input, errorEl) {
+        input.classList.remove('invalid', 'valid');
+        errorEl.classList.remove('visible');
+    }
+
+    /* ── role toggle ─────────────────────────── */
+    const roleOptions   = document.querySelectorAll('.role-option');
+    const doctorFields  = document.getElementById('doctorFields');
+    const specInput     = document.getElementById('specializationInput');
+    const feeInput      = document.getElementById('feeInput');
+    const yearsInput    = document.getElementById('yearsInput');
+
+    let isDoctor = false;
+
+    roleOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            roleOptions.forEach(o => o.classList.remove('selected'));
+            option.classList.add('selected');
+            const role = option.querySelector('input').value;
+            isDoctor = role === 'doctor';
+            doctorFields.style.display = isDoctor ? 'block' : 'none';
+        });
+    });
+
+    /* ── field references ────────────────────── */
+    const nameInput    = document.getElementById('nameInput');
+    const emailInput   = document.getElementById('emailInput');
+    const phoneInput   = document.getElementById('phoneInput');
+    const passwordInput= document.getElementById('passwordInput');
+    const confirmInput = document.getElementById('confirmInput');
+    const passwordHint = document.getElementById('passwordHint');
+
+    const nameError    = document.getElementById('nameError');
+    const emailError   = document.getElementById('emailError');
+    const phoneError   = document.getElementById('phoneError');
+    const specError    = document.getElementById('specializationError');
+    const feeError     = document.getElementById('feeError');
+    const yearsError   = document.getElementById('yearsError');
+    const passwordError= document.getElementById('passwordError');
+    const confirmError = document.getElementById('confirmError');
+
+    /* ── validators ──────────────────────────── */
+    function validateName() {
+        const v = nameInput.value.trim();
+        if (!v) { showError(nameInput, nameError); nameError.textContent = '⚠ Full name is required.'; return false; }
+        // Allow letters, spaces, hyphens, apostrophes — no digits
+        if (/\d/.test(v)) { showError(nameInput, nameError); nameError.textContent = '⚠ Please enter a valid name (letters only, no numbers).'; return false; }
+        if (v.length < 2) { showError(nameInput, nameError); nameError.textContent = '⚠ Name is too short.'; return false; }
+        showValid(nameInput, nameError); return true;
+    }
+
+    function validateEmail() {
+        const v = emailInput.value.trim();
+        if (!v) { showError(emailInput, emailError); emailError.textContent = '⚠ Email is required.'; return false; }
+        // Must contain @ and end with .com (case-insensitive)
+        const re = /^[^\s@]+@[^\s@]+\.com$/i;
+        if (!re.test(v)) { showError(emailInput, emailError); emailError.textContent = '⚠ Please enter a valid email (e.g. name@example.com).'; return false; }
+        showValid(emailInput, emailError); return true;
+    }
+
+    function validatePhone() {
+        const v = phoneInput.value.trim();
+        if (!v) { showError(phoneInput, phoneError); phoneError.textContent = '⚠ Phone number is required.'; return false; }
+        if (!/^\d+$/.test(v)) { showError(phoneInput, phoneError); phoneError.textContent = '⚠ Phone number must contain digits only (no letters or symbols).'; return false; }
+        if (v.length < 7) { showError(phoneInput, phoneError); phoneError.textContent = '⚠ Phone number is too short.'; return false; }
+        showValid(phoneInput, phoneError); return true;
+    }
+
+    function validateSpec() {
+        if (!isDoctor) return true;
+        const v = specInput.value.trim();
+        if (!v) { showError(specInput, specError); return false; }
+        showValid(specInput, specError); return true;
+    }
+
+    function validateFee() {
+        if (!isDoctor) return true;
+        const v = feeInput.value.trim();
+        if (!v || isNaN(v) || Number(v) < 0) { showError(feeInput, feeError); return false; }
+        showValid(feeInput, feeError); return true;
+    }
+
+    function validateYears() {
+        if (!isDoctor) return true;
+        const v = yearsInput.value.trim();
+        if (!v || isNaN(v) || Number(v) < 0) { showError(yearsInput, yearsError); return false; }
+        showValid(yearsInput, yearsError); return true;
+    }
+
+    function validatePassword() {
+        const v = passwordInput.value;
+        passwordHint.style.display = 'none'; // hide hint once they start
+        if (!v) { showError(passwordInput, passwordError); passwordError.textContent = '⚠ Password is required.'; return false; }
+        if (v.length < 6) { showError(passwordInput, passwordError); passwordError.textContent = '⚠ Password must be at least 6 characters long.'; return false; }
+        showValid(passwordInput, passwordError); return true;
+    }
+
+    function validateConfirm() {
+        const v = confirmInput.value;
+        if (!v) { showError(confirmInput, confirmError); confirmError.textContent = '⚠ Please confirm your password.'; return false; }
+        if (v !== passwordInput.value) { showError(confirmInput, confirmError); confirmError.textContent = '⚠ Passwords do not match.'; return false; }
+        showValid(confirmInput, confirmError); return true;
+    }
+
+    /* ── live validation (on blur) ───────────── */
+    nameInput.addEventListener('blur',     validateName);
+    emailInput.addEventListener('blur',    validateEmail);
+    phoneInput.addEventListener('blur',    validatePhone);
+    passwordInput.addEventListener('blur', validatePassword);
+    confirmInput.addEventListener('blur',  validateConfirm);
+    if (specInput)  specInput.addEventListener('blur',  validateSpec);
+    if (feeInput)   feeInput.addEventListener('blur',   validateFee);
+    if (yearsInput) yearsInput.addEventListener('blur', validateYears);
+
+    /* live phone: strip non-digits as user types */
+    phoneInput.addEventListener('input', () => {
+        phoneInput.value = phoneInput.value.replace(/\D/g, '');
+    });
+
+    /* show hint when user focuses password */
+    passwordInput.addEventListener('focus', () => {
+        if (!passwordInput.classList.contains('valid')) {
+            passwordHint.style.display = 'flex';
+        }
+    });
+
+    /* re-validate confirm whenever password changes */
+    passwordInput.addEventListener('input', () => {
+        if (confirmInput.value) validateConfirm();
+    });
+
+    /* ── submit gate ─────────────────────────── */
+    document.getElementById('registerForm').addEventListener('submit', function (e) {
+        const checks = [
+            validateName(),
+            validateEmail(),
+            validatePhone(),
+            validateSpec(),
+            validateFee(),
+            validateYears(),
+            validatePassword(),
+            validateConfirm(),
+        ];
+        if (checks.includes(false)) {
+            e.preventDefault();
+            // Scroll to first invalid field
+            const firstInvalid = document.querySelector('.form-control.invalid');
+            if (firstInvalid) firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+})();
+</script>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

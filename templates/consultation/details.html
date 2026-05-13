@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Consultation Details</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<h2>Consultation #{{ appt.id }}</h2>
+<p>Doctor: {{ appt.doctor.user.name }}</p>
+<p>Status: {{ appt.status }}</p>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>{{ doctor.user.name }} - MedBook</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
+<body>
+<div class="navbar">
+  <a href="/" class="navbar-brand"><div class="brand-icon">🏥</div><div class="brand-text">Med<span>Book</span></div></a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    {% if current_user.is_authenticated %}<li><a href="{{ url_for('auth.logout') }}">Logout</a></li>{% else %}<li><a href="{{ url_for('auth.login') }}">Login</a></li>{% endif %}
+  </ul>
+</div>
+<div class="main-content" style="max-width:800px;margin:0 auto;">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for c,m in messages %}<div class="flash flash-{{ c }}">{{ m }}</div>{% endfor %}{% endif %}
+  {% endwith %}
+
+  <div class="card">
+    <div class="card-body">
+      <h2>{{ doctor.user.name }}</h2>
+      <p>{{ doctor.specialization }}</p>
+      <p><strong>Fee:</strong> ${{ doctor.fee }}</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>
